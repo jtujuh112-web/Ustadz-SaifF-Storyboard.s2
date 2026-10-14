@@ -1,0 +1,2459 @@
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Sparkles,
+  Upload,
+  Image as ImageIcon,
+  User,
+  Video,
+  Copy,
+  Check,
+  Download,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Layers,
+  Globe,
+  Palette,
+  Camera,
+  FileJson,
+  Trash2,
+  History,
+  Settings,
+  ZoomIn,
+  X,
+  Play,
+  Volume2,
+  ShieldCheck,
+  Server,
+  Info,
+  ChevronRight,
+  ChevronDown,
+  Eye,
+  Bookmark,
+  Wand2,
+  Sliders,
+  HelpCircle,
+  FileText
+} from 'lucide-react';
+
+const BACKGROUND_OPTIONS = [
+  { id: 'studio-white', label: 'Studio putih premium', desc: 'Clean high-key commercial white cyclorama studio with soft diffused rim lighting' },
+  { id: 'studio-pink', label: 'Studio pink elegan', desc: 'Elegant pastel rose-pink aesthetic studio backdrop with soft warm beauty lighting' },
+  { id: 'bedroom-modern', label: 'Kamar tidur modern', desc: 'Cozy modern minimalist bedroom with neutral linen bedding and soft morning window light' },
+  { id: 'living-minimalist', label: 'Ruang tamu minimalis', desc: 'Contemporary minimalist living room with travertine accents, warm sofa, and natural daylight' },
+  { id: 'kitchen-modern', label: 'Dapur modern', desc: 'Sleek modern marble countertop kitchen with clean appliances and bright daylight' },
+  { id: 'cafe-aesthetic', label: 'Kafe estetik', desc: 'Artisanal aesthetic cafe interior with warm wood textures, plants, and soft bokeh' },
+  { id: 'workspace-minimal', label: 'Ruang kerja minimalis', desc: 'Clean modern desk setup with aesthetic organizer, monitor, and soft key light' },
+  { id: 'boutique-fashion', label: 'Butik fashion', desc: 'High-end fashion boutique with curated clothing racks, full-length mirror, and warm spotlights' },
+  { id: 'store-modern', label: 'Toko modern', desc: 'Bright modern retail display aisle with clean shelving and crisp commercial illumination' },
+  { id: 'luxury-home', label: 'Rumah mewah', desc: 'Upscale luxury residence interior with high ceilings, marble floor, and chandelier glow' },
+  { id: 'home-terrace', label: 'Teras rumah', desc: 'Breezy semi-outdoor home terrace with tropical patio plants and natural morning sun' },
+  { id: 'green-garden', label: 'Taman hijau', desc: 'Lush manicured green garden with soft dappled sunlight through leaves' },
+  { id: 'apartment-room', label: 'Ruangan apartemen', desc: 'Modern urban apartment room with floor-to-ceiling city view window' },
+  { id: 'outdoor-natural', label: 'Latar outdoor natural', desc: 'Natural golden-hour outdoor walkway with clean depth-of-field background' },
+  { id: 'category-auto', label: 'Latar sesuai kategori produk', desc: 'Contextually matched environment tailored automatically to the analyzed product category' },
+  { id: 'custom-upload', label: 'Custom background melalui unggah foto', desc: 'User-uploaded custom background reference photo' },
+  { id: 'custom-text', label: 'Custom background melalui deskripsi teks', desc: 'User-specified custom background description' }
+];
+
+const CONTENT_STYLES = [
+  { id: 'ugc-smartphone', label: '1. UGC smartphone realistis', rule: 'Handheld iPhone 15 Pro aesthetic, natural micro-shake, authentic eye-level framing, candid creator energy' },
+  { id: 'product-review', label: '2. Review produk', rule: 'Structured honest reviewer framing, alternating between face reaction and clear product inspection' },
+  { id: 'unboxing', label: '3. Unboxing', rule: 'Tactile packaging reveal, neat opening sequence, first-impression facial expression, crisp close-up of contents' },
+  { id: 'product-showcase', label: '4. Product showcase', rule: 'Smooth orbital camera movement, hero angles, highlighting silhouette, texture, and build quality' },
+  { id: 'product-demo', label: '5. Demonstrasi penggunaan produk', rule: 'Step-by-step practical live action showing exact real-world operation and ergonomic handling' },
+  { id: 'before-after', label: '6. Before and after (terbukti)', rule: 'Clear visual comparison of state prior to usage vs immediate realistic result without exaggerated fake CGI' },
+  { id: 'pov-hands', label: '7. POV hands-only', rule: 'First-person point-of-view looking down at natural human hands interacting with the product; NO face shown' },
+  { id: 'talking-head', label: '8. Talking head', rule: 'Medium close-up chest-up framing, expressive direct eye contact with camera while holding product clearly' },
+  { id: 'storytelling', label: '9. Storytelling affiliate', rule: 'Narrative visual arc starting from a relatable moment transitioning smoothly into discovering the product' },
+  { id: 'problem-solution', label: '10. Problem-solution', rule: 'Opening with a realistic everyday frustration (0-2s) and immediately resolving it cleanly using the product' },
+  { id: 'fashion-tryon', label: '11. Fashion try-on', rule: 'Full-body to three-quarter mirror/studio framing showcasing fabric drape, fit, movement, and styling' },
+  { id: 'short-tutorial', label: '12. Tutorial singkat', rule: 'Clear instructional camera angles showing 1-2-3 usage steps with crisp focus transitions' },
+  { id: 'cinematic-commercial', label: '13. Cinematic product commercial', rule: 'High-end commercial dolly push-in, dramatic rim light, shallow depth of field, luxury pacing' },
+  { id: 'soft-selling', label: '14. Soft selling', rule: 'Casual lifestyle integration where the product naturally elevates the daily routine without aggressive pitching' },
+  { id: 'hard-selling-honest', label: '15. Hard selling yang tetap jujur', rule: 'High-energy confident presentation focusing directly on verifiable core strengths and build quality' },
+  { id: 'light-comedy', label: '16. Konten komedi ringan', rule: 'Playful expressive timing and relatable lighthearted visual twist that naturally spotlights the product' },
+  { id: 'satisfying', label: '17. Konten satisfying', rule: 'ASMR-inspired smooth textures, symmetrical alignment, crisp tactile clicks, pours, or glides' },
+  { id: 'closeup-detail', label: '18. Close-up detail produk', rule: 'Macro lens perspective emphasizing stitching, material grain, finish, buttons, or applicator precision' },
+  { id: 'daily-life', label: '19. Daily life recommendation', rule: 'Warm slice-of-life vlog aesthetic integrating the product into a realistic morning or evening routine' },
+  { id: 'viral-visual-hook', label: '20. Konten viral dengan hook visual', rule: 'Dynamic motion-first opening in the first 2 seconds that captures attention through real physical action' },
+  { id: 'feature-comparison', label: '21. Perbandingan fitur yang dapat dibuktikan', rule: 'Side-by-side or sequential demonstration of specific observable design features and ergonomic advantages' },
+  { id: 'lifestyle-premium', label: '22. Lifestyle premium', rule: 'Sophisticated aspirational setting, poised graceful model movements, refined color grading' },
+  { id: 'faceless-demo', label: '23. Konten demonstrasi tanpa wajah', rule: 'Neck-down or over-the-shoulder framing focusing strictly on torso, hands, and product mechanics' },
+  { id: 'custom-style', label: '24. Custom style melalui deskripsi teks', rule: 'Custom visual and camera direction defined by user description' }
+];
+
+const HOOK_TYPES = [
+  { id: 'auto', label: 'Otomatis (Sesuai Produk & Gaya)' },
+  { id: 'problem', label: 'Problem Hook (Masalah Sehari-hari)' },
+  { id: 'curiosity', label: 'Curiosity Hook (Memancing Rasa Penasaran)' },
+  { id: 'unexpected-visual', label: 'Unexpected Visual Hook (Visual Mengejutkan & Relevan)' },
+  { id: 'relatable-daily', label: 'Relatable Daily-Life Hook (Situasi Dekat dengan Penonton)' },
+  { id: 'feature-demo', label: 'Demonstrasi Fitur Langsung' },
+  { id: 'question', label: 'Pertanyaan Interaktif' }
+];
+
+const FORBIDDEN_CTA_PHRASES = [
+  'link di bio',
+  'keranjang kuning',
+  'lagi po',
+  'lagi diskon',
+  'kirim sekarang',
+  'lagi promo'
+];
+
+function sanitizeForbiddenCTA(text) {
+  if (!text) return text;
+  let cleaned = text;
+  const replacements = [
+    { regex: /cek\s+link\s+di\s+bio|link\s+di\s+bio/gi, replacement: 'coba cek detail produknya' },
+    { regex: /cek\s+keranjang\s+kuning|di\s+keranjang\s+kuning|keranjang\s+kuning/gi, replacement: 'pilihan produk ini' },
+    { regex: /lagi\s+po\b|sedang\s+po\b/gi, replacement: 'tersedia untuk kebutuhanmu' },
+    { regex: /lagi\s+diskon|sedang\s+diskon/gi, replacement: 'layak banget dipertimbangkan' },
+    { regex: /kirim\s+sekarang/gi, replacement: 'bisa masuk daftar pilihanmu' },
+    { regex: /lagi\s+promo|sedang\s+promo/gi, replacement: 'punya fitur yang fungsional' }
+  ];
+  replacements.forEach(({ regex, replacement }) => {
+    cleaned = cleaned.replace(regex, replacement);
+  });
+  return cleaned;
+}
+
+function checkContainsForbiddenCTA(text) {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  return FORBIDDEN_CTA_PHRASES.filter((phrase) => lower.includes(phrase));
+}
+
+function estimateSpeechMetrics(dialogue, language) {
+  if (!dialogue || language === 'none') {
+    return {
+      wordCount: 0,
+      estimatedSeconds: 0,
+      status: 'muted',
+      label: 'Tanpa Dialog (Visual & Ambient Audio 10.0 dtk)'
+    };
+  }
+  const words = dialogue
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
+  const wordCount = words.length;
+  // Natural energetic TikTok affiliate pace in ID/MY is ~2.4 words/sec + ~1.2s total pauses/action breathing room
+  const speakingTime = wordCount / 2.4;
+  const pauseBuffer = 1.2;
+  const totalEstimated = Number((speakingTime + pauseBuffer).toFixed(1));
+
+  let status = 'optimal';
+  let label = 'Pas untuk 10 Detik (Ideal 20–25 kata)';
+  if (wordCount < 16) {
+    status = 'short';
+    label = 'Agak Pendek (<16 kata) — Banyak ruang jeda visual';
+  } else if (wordCount > 27) {
+    status = 'long';
+    label = 'Terlalu Panjang (>27 kata) — Risiko terpotong di 10 detik';
+  }
+
+  return {
+    wordCount,
+    estimatedSeconds: totalEstimated,
+    status,
+    label
+  };
+}
+
+// Convert Base64 PCM16 from Gemini TTS to playable WAV Blob
+function pcmBase64ToWavUrl(base64Audio, sampleRate = 24000) {
+  const binaryString = atob(base64Audio);
+  const len = binaryString.length;
+  const bytes = new Uint8Array(len);
+  for (let i = 0; i < len; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  const pcm16 = new Int16Array(bytes.buffer);
+  const numChannels = 1;
+  const byteRate = sampleRate * numChannels * 2;
+  const blockAlign = numChannels * 2;
+  const wavBuffer = new ArrayBuffer(44 + pcm16.byteLength);
+  const view = new DataView(wavBuffer);
+
+  const writeString = (offset, str) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + pcm16.byteLength, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, pcm16.byteLength, true);
+
+  const pcmBytes = new Uint8Array(wavBuffer, 44);
+  pcmBytes.set(bytes);
+
+  const blob = new Blob([wavBuffer], { type: 'audio/wav' });
+  return URL.createObjectURL(blob);
+}
+
+async function fetchGeminiWithRetry(url, payload, maxRetries = 3) {
+  let delay = 1000;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      const errData = await response.json().catch(() => ({}));
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        throw new Error(errData?.error?.message || `HTTP Error ${response.status}`);
+      }
+    } catch (err) {
+      if (attempt === maxRetries - 1) throw err;
+    }
+    await new Promise((r) => setTimeout(r, delay));
+    delay *= 2;
+  }
+  throw new Error('Gagal menghubungi server AI setelah beberapa percobaan.');
+}
+
+export default function App() {
+  // Duration & Scene state (strictly 10s = 1 scene, 20s = 2 scenes)
+  const [durationMode, setDurationMode] = useState(20); // 10 or 20
+  const sceneCount = durationMode === 20 ? 2 : 1;
+
+  // Image Uploads (Product, Model, Custom Background)
+  const [productImage, setProductImage] = useState(null); // { file, previewUrl, base64, mimeType, name }
+  const [modelImage, setModelImage] = useState(null);     // { file, previewUrl, base64, mimeType, name }
+  const [customBgImage, setCustomBgImage] = useState(null);
+
+  // Settings & Inputs
+  const [productNotes, setProductNotes] = useState('');
+  const [selectedBg, setSelectedBg] = useState('studio-pink');
+  const [customBgText, setCustomBgText] = useState('');
+  const [language, setLanguage] = useState('id-ID'); // 'id-ID' | 'ms-MY' | 'none'
+  const [selectedStyle, setSelectedStyle] = useState('ugc-smartphone');
+  const [customStyleText, setCustomStyleText] = useState('');
+  const [selectedHookType, setSelectedHookType] = useState('auto');
+  const [generationMode, setGenerationMode] = useState('full'); // 'full' (Prompt + Storyboard Image AI) | 'prompt-only' (Mode Gratis / Tanpa Gambar)
+
+  // Generation Progress & Error States
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [progressStep, setProgressStep] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
+  const [errorBanner, setErrorBanner] = useState(null);
+  const [sceneImageState, setSceneImageState] = useState({
+    1: { loading: false, url: null, error: null, promptUsed: '' },
+    2: { loading: false, url: null, error: null, promptUsed: '' }
+  });
+
+  // Generated Output Data
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [storyboardData, setStoryboardData] = useState(null);
+  const [validatedJsonString, setValidatedJsonString] = useState('');
+  const [isJsonValid, setIsJsonValid] = useState(false);
+
+  // UI Helpers: Copy feedback, Lightbox, Modals, History, TTS Audio test
+  const [copiedKey, setCopiedKey] = useState(null);
+  const [lightboxImage, setLightboxImage] = useState(null);
+  const [activePromptModal, setActivePromptModal] = useState(null);
+  const [showArchitectureModal, setShowArchitectureModal] = useState(false);
+  const [historyItems, setHistoryItems] = useState([]);
+  const [ttsState, setTtsState] = useState({
+    1: { loading: false, audioUrl: null, error: null },
+    2: { loading: false, audioUrl: null, error: null }
+  });
+
+  const productInputRef = useRef(null);
+  const modelInputRef = useRef(null);
+  const bgInputRef = useRef(null);
+
+  const handleFileUpload = (e, targetType) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      setErrorBanner('Format file tidak didukung. Harap unggah file JPG, JPEG, PNG, atau WEBP.');
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setErrorBanner('Ukuran file terlalu besar (maksimal 10MB). Silakan pilih foto dengan ukuran lebih kecil.');
+      return;
+    }
+
+    setErrorBanner(null);
+    const reader = new FileReader();
+    reader.onload = () => {
+      const resultStr = reader.result;
+      const base64Data = resultStr.split(',')[1];
+      const payload = {
+        name: file.name,
+        mimeType: file.type,
+        previewUrl: resultStr,
+        base64: base64Data,
+        sizeKB: Math.round(file.size / 1024)
+      };
+
+      if (targetType === 'product') setProductImage(payload);
+      if (targetType === 'model') setModelImage(payload);
+      if (targetType === 'bg') setCustomBgImage(payload);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const loadSampleReferences = () => {
+    setErrorBanner(null);
+
+    // Generate a crisp realistic-looking cosmetic serum bottle SVG and convert to PNG data URL
+    const productSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#fff1f5"/>
+          <stop offset="100%" stop-color="#fce7f3"/>
+        </linearGradient>
+        <linearGradient id="bottle" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#f472b6"/>
+          <stop offset="50%" stop-color="#fb7185"/>
+          <stop offset="100%" stop-color="#e11d48"/>
+        </linearGradient>
+      </defs>
+      <rect width="600" height="600" fill="url(#bg)"/>
+      <ellipse cx="300" cy="500" rx="110" ry="20" fill="#f9a8d4" opacity="0.45"/>
+      <rect x="235" y="210" width="130" height="270" rx="28" fill="url(#bottle)"/>
+      <rect x="248" y="275" width="104" height="145" rx="10" fill="#ffffff" opacity="0.95"/>
+      <text x="300" y="325" font-family="sans-serif" font-size="18" font-weight="bold" fill="#831843" text-anchor="middle">LUMINA ROSE</text>
+      <text x="300" y="352" font-family="sans-serif" font-size="12" fill="#be185d" text-anchor="middle">NIACINAMIDE + PEPTIDE</text>
+      <text x="300" y="378" font-family="sans-serif" font-size="11" fill="#9d174d" text-anchor="middle">GLOW SERUM 30ML</text>
+      <rect x="272" y="165" width="56" height="45" rx="6" fill="#fbcfe8" stroke="#f472b6" stroke-width="2"/>
+      <path d="M282 165 Q300 95 318 165 Z" fill="#ffffff" stroke="#e5e7eb" stroke-width="2"/>
+    </svg>`;
+
+    const modelSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+      <rect width="600" height="600" fill="#fdf2f8"/>
+      <circle cx="300" cy="230" r="115" fill="#f43f5e" opacity="0.15"/>
+      <path d="M165 560 C165 410 435 410 435 560 Z" fill="#f472b6"/>
+      <path d="M195 235 C195 130 405 130 405 235 C405 320 380 365 300 365 C220 365 195 320 195 235 Z" fill="#fce7f3" stroke="#ec4899" stroke-width="4"/>
+      <circle cx="300" cy="240" r="72" fill="#fde68a"/>
+      <circle cx="275" cy="230" r="7" fill="#374151"/>
+      <circle cx="325" cy="230" r="7" fill="#374151"/>
+      <path d="M280 265 Q300 282 320 265" fill="none" stroke="#be123c" stroke-width="4" stroke-linecap="round"/>
+      <text x="300" y="520" font-family="sans-serif" font-size="16" font-weight="bold" fill="#ffffff" text-anchor="middle">MODEL HIJAB PASTEL PINK</text>
+    </svg>`;
+
+    const renderSvgToPngPayload = (svgText, filename, callback) => {
+      const img = new Image();
+      const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 600;
+        canvas.height = 600;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/png');
+        URL.revokeObjectURL(url);
+        callback({
+          name: filename,
+          mimeType: 'image/png',
+          previewUrl: dataUrl,
+          base64: dataUrl.split(',')[1],
+          sizeKB: 42
+        });
+      };
+      img.src = url;
+    };
+
+    renderSvgToPngPayload(productSvg, 'lumina-rose-serum.png', (prodPayload) => {
+      setProductImage(prodPayload);
+    });
+    renderSvgToPngPayload(modelSvg, 'model-hijab-pink.png', (modPayload) => {
+      setModelImage(modPayload);
+    });
+    setProductNotes('Lumina Rose Glow Serum 30ml dengan botol kaca pink gradasi, pipet putih, tekstur ringan mudah meresap untuk membantu melembapkan dan mencerahkan tampilan kulit.');
+  };
+
+  const copyToClipboard = (text, key) => {
+    if (!text) return;
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-9999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2200);
+    } catch (err) {
+      setErrorBanner('Gagal menyalin teks ke clipboard.');
+    }
+    document.body.removeChild(textArea);
+  };
+
+  const downloadImagePng = (dataUrl, filename) => {
+    if (!dataUrl) {
+      setErrorBanner('Gambar belum tersedia untuk diunduh.');
+      return;
+    }
+    const link = document.createElement('a');
+    link.href = dataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const downloadAllImages = () => {
+    if (sceneImageState[1]?.url) {
+      downloadImagePng(sceneImageState[1].url, `Ustadz_Saiff_Storyboard_Scene_1.png`);
+    }
+    if (sceneCount === 2 && sceneImageState[2]?.url) {
+      setTimeout(() => {
+        downloadImagePng(sceneImageState[2].url, `Ustadz_Saiff_Storyboard_Scene_2.png`);
+      }, 450);
+    }
+  };
+
+  const downloadJsonFile = () => {
+    if (!validatedJsonString || !isJsonValid) return;
+    const blob = new Blob([validatedJsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Ustadz_Saiff_Veo31_Prompt_${durationMode}s.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const generateSceneStoryboardImage = async (sceneObj, analysis, currentSceneNum) => {
+    setSceneImageState((prev) => ({
+      ...prev,
+      [currentSceneNum]: { ...prev[currentSceneNum], loading: true, error: null }
+    }));
+
+    try {
+      const apiKey = '';
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=${apiKey}`;
+
+      const bgObj = BACKGROUND_OPTIONS.find((b) => b.id === selectedBg);
+      const styleObj = CONTENT_STYLES.find((s) => s.id === selectedStyle);
+      const isHandsOnly = selectedStyle === 'pov-hands' || selectedStyle === 'faceless-demo';
+
+      const panelsList = (sceneObj.panels || []).map(
+        (p, idx) => `Panel ${idx + 1} (${p.timestamp}): ${p.shot_type} - ${p.description}`
+      ).join('\n');
+
+      const imagePromptText = `Create a photorealistic, high-end commercial photography vertical 9:16 STORYBOARD SHEET containing a clean 2 columns x 3 rows GRID (6 distinct cinematic panels total) for Scene ${currentSceneNum} (10 seconds total).
+
+CRITICAL VISUAL CONSISTENCY & REFERENCE LOCK:
+- PRODUCT LOCK: Strictly match the exact product shown in the attached product reference image (${analysis.product_name || 'uploaded product'}): ${analysis.product_visual_details}. Preserve exact shape, color, packaging, cap/applicator, material texture, and logo placement without distortion.
+- MODEL LOCK: ${isHandsOnly ? 'Strictly POV HANDS-ONLY / FACELESS framing: show only natural realistic human hands with accurate 5 fingers interacting with the product. Do NOT show a face.' : `Strictly maintain the exact same model identity across all 6 panels matching the reference model (${analysis.model_identity_details}): consistent facial structure, skin tone, hair/hijab style and color, and outfit.`}
+- LOCATION / BACKGROUND LOCK: ${selectedBg === 'custom-text' ? customBgText : bgObj?.desc}.
+- CONTENT STYLE: ${styleObj?.label} (${styleObj?.rule}).
+
+6 DISTINCT PANELS IN 2x3 GRID (Left-to-Right, Top-to-Bottom):
+${panelsList}
+
+STORYBOARD QUALITY & FORMATTING RULES:
+- Portrait 9:16 aspect ratio divided neatly into 6 equal rectangular frames (2 columns x 3 rows) with thin clean white borders between frames.
+- Add only a tiny minimalist corner badge in each panel ("01 • 0-2s", "02 • 2-4s", "03 • 4-6s", "04 • 6-8s", "05 • 8-9s", "06 • 9-10s").
+- DO NOT put long paragraphs, subtitles, random gibberish text, or watermarks inside the panels.
+- Photorealistic skin texture, natural human hand anatomy (5 fingers), sharp commercial product focus, neutral bright clean lighting, natural shadows and reflections.
+- Each of the 6 panels MUST use a different camera angle or action moment following the 10-second timeline above (never repeat 6 identical frames).`;
+
+      const parts = [{ text: imagePromptText }];
+
+      if (productImage?.base64) {
+        parts.push({
+          inlineData: {
+            mimeType: productImage.mimeType,
+            data: productImage.base64
+          }
+        });
+      }
+
+      if (modelImage?.base64 && !isHandsOnly) {
+        parts.push({
+          inlineData: {
+            mimeType: modelImage.mimeType,
+            data: modelImage.base64
+          }
+        });
+      }
+
+      if (selectedBg === 'custom-upload' && customBgImage?.base64) {
+        parts.push({
+          inlineData: {
+            mimeType: customBgImage.mimeType,
+            data: customBgImage.base64
+          }
+        });
+      }
+
+      const payload = {
+        contents: [{ role: 'user', parts }],
+        generationConfig: {
+          responseModalities: ['IMAGE'],
+          imageConfig: { aspectRatio: '9:16' }
+        }
+      };
+
+      const result = await fetchGeminiWithRetry(apiUrl, payload, 3);
+      const imagePart = result?.candidates?.[0]?.content?.parts?.find((p) => p.inlineData);
+
+      if (!imagePart || !imagePart.inlineData?.data) {
+        throw new Error(`Layanan AI tidak mengembalikan data gambar untuk Scene ${currentSceneNum}.`);
+      }
+
+      const generatedDataUrl = `data:${imagePart.inlineData.mimeType || 'image/png'};base64,${imagePart.inlineData.data}`;
+
+      setSceneImageState((prev) => ({
+        ...prev,
+        [currentSceneNum]: {
+          loading: false,
+          url: generatedDataUrl,
+          error: null,
+          promptUsed: imagePromptText
+        }
+      }));
+
+      return generatedDataUrl;
+    } catch (err) {
+      setSceneImageState((prev) => ({
+        ...prev,
+        [currentSceneNum]: {
+          ...prev[currentSceneNum],
+          loading: false,
+          error: err.message || `Gagal menghasilkan gambar storyboard Scene ${currentSceneNum}.`
+        }
+      }));
+      return null;
+    }
+  };
+
+  const handleGenerateStoryboard = async () => {
+    if (!productImage) {
+      setErrorBanner('Harap unggah Foto Produk terlebih dahulu (atau klik tombol "Muat Contoh Siap Uji" untuk mencoba).');
+      return;
+    }
+
+    const isHandsOnly = selectedStyle === 'pov-hands' || selectedStyle === 'faceless-demo';
+    if (!modelImage && !isHandsOnly) {
+      setErrorBanner('Harap unggah Foto Model/Host terlebih dahulu, atau pilih gaya "7. POV hands-only" / "23. Konten demonstrasi tanpa wajah".');
+      return;
+    }
+
+    setErrorBanner(null);
+    setIsGenerating(true);
+    setProgressStep(1);
+    setProgressMessage('Memvalidasi referensi visual produk, model, dan latar belakang...');
+
+    // Reset scene images before a new full generation
+    setSceneImageState({
+      1: { loading: generationMode === 'full', url: null, error: null, promptUsed: '' },
+      2: { loading: generationMode === 'full' && sceneCount === 2, url: null, error: null, promptUsed: '' }
+    });
+
+    try {
+      const apiKey = '';
+      const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+      const bgObj = BACKGROUND_OPTIONS.find((b) => b.id === selectedBg);
+      const styleObj = CONTENT_STYLES.find((s) => s.id === selectedStyle);
+      const hookObj = HOOK_TYPES.find((h) => h.id === selectedHookType);
+
+      setProgressStep(2);
+      setProgressMessage('Menganalisis foto produk & identitas model dengan AI Multimodal serta menyusun skrip 10 detik & Prompt Veo 3.1...');
+
+      const languageInstruction =
+        language === 'id-ID'
+          ? 'Gunakan Bahasa Indonesia modern, santai, keren, natural, komunikatif, dan cocok untuk konten affiliate TikTok. Target wajib: 20 sampai 25 kata per scene (agar pas diucapkan dalam 10 detik dengan jeda natural).'
+          : language === 'ms-MY'
+          ? 'Gunakan Bahasa Melayu Malaysia yang natural untuk audiens Malaysia (contoh kosakata natural: korang, memang berbaloi, best sangat, senang guna, tengok ni), BUKAN terjemahan mentah Bahasa Indonesia. Target wajib: 20 sampai 25 kata per scene (agar pas 10 detik).'
+          : 'TANPA DIALOG (NONE). Kosongkan field dialogue menjadi string kosong "". Jangan menyisipkan narasi suara tersembunyi. Instruksikan Veo 3.1 secara tegas: "NO human speech, NO voice-over, mute vocal track, focus on crisp natural ambient and product ASMR sounds."';
+
+      const systemPrompt = `Anda adalah Direktur Kreatif AI Komersial & Spesialis Prompt Google Veo 3.1 untuk platform "Ustadz Saiff Storyboard S.2".
+Tugas Anda adalah menganalisis foto referensi produk dan model secara akurat, lalu menghasilkan konsep storyboard affiliate, dialog 10 detik yang terukur, rencana 6 panel visual per scene, serta prompt produksi video Google Veo 3.1.
+
+ATURAN WAJIB & KETAT:
+1. PERTAHANKAN PRODUK & MODEL: Jangan mengarang fitur atau spesifikasi teknis yang tidak terlihat pada foto atau catatan pengguna. Jangan mengubah merek, logo, warna, bentuk, atau kemasan produk. Pertahankan identitas wajah, warna kulit, gaya rambut/hijab, dan pakaian model secara konsisten dari Scene 1 ke Scene 2.
+2. DURASI & JUMLAH SCENE:
+   - Pilihan pengguna saat ini: ${durationMode} detik (${sceneCount} scene).
+   - Setiap scene berdurasi TEPAT 10 detik.
+   - Jika 2 scene dipilih: Scene 1 dan Scene 2 WAJIB menyambung sebagai satu cerita berkesinambungan. Scene 2 wajib melanjutkan posisi model, pakaian, lokasi, pencahayaan, produk, dan aksi dari akhir detik ke-10 Scene 1. JANGAN mengulang hook Scene 1 di Scene 2.
+3. PEMBAGIAN TIMELINE WAJIB:
+   - Jika 1 Scene (10 detik):
+     * 0-2 detik: Hook visual & verbal yang menarik perhatian.
+     * 2-6 detik: Pengenalan produk & demonstrasi manfaat utama.
+     * 6-10 detik: Bukti visual detail & Call to Action (CTA) natural.
+   - Jika 2 Scene (20 detik):
+     * Scene 1: 0-2 detik (Hook), 2-6 detik (Perkenalan masalah atau pengenalan produk), 6-10 detik (Demonstrasi awal atau pengantar manfaat).
+     * Scene 2: 0-3 detik (Melanjutkan demonstrasi dari posisi akhir Scene 1), 3-7 detik (Menjelaskan manfaat utama secara detail), 7-10 detik (CTA natural & ekspresi penutup).
+4. ATURAN DIALOG 10 DETIK:
+   - ${languageInstruction}
+5. LARANGAN KERAS KATA CTA (WAJIB DIPATUHI):
+   - DILARANG KERAS menggunakan frasa berikut di bagian mana pun: "Link di bio", "Keranjang kuning", "Lagi PO", "Lagi diskon", "Kirim sekarang", "Lagi promo".
+   - Gunakan CTA yang kreatif, sopan, dan relevan seperti: "Kalau kamu cari yang praktis kayak gini, produk ini layak banget kamu pertimbangkan." atau "Kalau cocok sama kebutuhanmu, coba cek detail produknya, ya."
+6. 6 PANEL STORYBOARD PER SCENE:
+   - Setiap scene wajib memiliki tepat 6 panel berbeda (Panel 1: Opening hook & establishing shot, Panel 2: Medium shot model bersama produk, Panel 3: Close-up detail produk, Panel 4: Demonstrasi penggunaan, Panel 5: Close-up fitur/manfaat, Panel 6: Ending shot & CTA visual).
+7. PROMPT GOOGLE VEO 3.1:
+   - Field "visual_prompt" harus menjadi SATU BLOK PROMPT LENGKAP yang sangat detail dan siap tempel ke Google Veo 3.1, mencakup: Durasi 10 detik, Rasio 9:16, Deskripsi Model konsisten, Deskripsi Produk akurat, Lokasi & Latar, Gaya Konten, Pencahayaan, Jenis Shot, Pergerakan Kamera, Gerakan Model & Interaksi Produk, Ekspresi Wajah, Urutan Aksi dengan Timestamp ([00:00-00:02], [00:02-00:06], [00:06-00:10]), Dialog & Intonasi (beserta instruksi lip-sync akurat atau larangan suara manusia jika Tanpa Dialog), Musik/Suara Lingkungan, Instruksi Kesinambungan Antar-Scene, dan Negative Prompt.`;
+
+      const userPromptText = `Analisis referensi gambar yang dilampirkan dan buat output JSON lengkap untuk proyek Ustadz Saiff Storyboard S.2 dengan parameter berikut:
+- Durasi Total: ${durationMode} detik (${sceneCount} Scene, masing-masing 10 detik)
+- Bahasa Dialog: ${language}
+- Gaya Konten: ${styleObj?.label} — Aturan Visual: ${styleObj?.rule} ${selectedStyle === 'custom-style' ? `(${customStyleText})` : ''}
+- Variasi Hook: ${hookObj?.label}
+- Latar Belakang: ${bgObj?.label} — Deskripsi: ${selectedBg === 'custom-text' ? customBgText : bgObj?.desc}
+- Catatan Tambahan Produk dari Pengguna: ${productNotes ? productNotes : 'Tidak ada catatan tambahan. Analisis murni dari visual foto produk yang diunggah dan gunakan hanya manfaat yang masuk akal dan terbukti secara visual.'}`;
+
+      const multimodalParts = [{ text: userPromptText }];
+
+      if (productImage?.base64) {
+        multimodalParts.push({
+          inlineData: {
+            mimeType: productImage.mimeType,
+            data: productImage.base64
+          }
+        });
+      }
+      if (modelImage?.base64) {
+        multimodalParts.push({
+          inlineData: {
+            mimeType: modelImage.mimeType,
+            data: modelImage.base64
+          }
+        });
+      }
+      if (selectedBg === 'custom-upload' && customBgImage?.base64) {
+        multimodalParts.push({
+          inlineData: {
+            mimeType: customBgImage.mimeType,
+            data: customBgImage.base64
+          }
+        });
+      }
+
+      const responseSchema = {
+        type: 'OBJECT',
+        properties: {
+          analysis: {
+            type: 'OBJECT',
+            properties: {
+              product_name: { type: 'STRING' },
+              product_category: { type: 'STRING' },
+              product_visual_details: { type: 'STRING' },
+              identifiable_features: { type: 'ARRAY', items: { type: 'STRING' } },
+              logical_benefits: { type: 'ARRAY', items: { type: 'STRING' } },
+              usage_method: { type: 'STRING' },
+              model_identity_details: { type: 'STRING' },
+              hook_strategy_used: { type: 'STRING' },
+              cta_strategy_used: { type: 'STRING' }
+            },
+            required: [
+              'product_name',
+              'product_category',
+              'product_visual_details',
+              'identifiable_features',
+              'logical_benefits',
+              'usage_method',
+              'model_identity_details',
+              'hook_strategy_used',
+              'cta_strategy_used'
+            ]
+          },
+          scenes: {
+            type: 'ARRAY',
+            items: {
+              type: 'OBJECT',
+              properties: {
+                scene_number: { type: 'INTEGER' },
+                duration_seconds: { type: 'INTEGER' },
+                hook_or_bridge_summary: { type: 'STRING' },
+                visual_prompt: { type: 'STRING' },
+                timeline: {
+                  type: 'ARRAY',
+                  items: {
+                    type: 'OBJECT',
+                    properties: {
+                      start: { type: 'INTEGER' },
+                      end: { type: 'INTEGER' },
+                      action: { type: 'STRING' }
+                    },
+                    required: ['start', 'end', 'action']
+                  }
+                },
+                dialogue: { type: 'STRING' },
+                intonation_guide: { type: 'STRING' },
+                camera_movement: { type: 'STRING' },
+                model_movement: { type: 'STRING' },
+                audio_prompt: { type: 'STRING' },
+                continuity: { type: 'STRING' },
+                negative_prompt: { type: 'STRING' },
+                panels: {
+                  type: 'ARRAY',
+                  items: {
+                    type: 'OBJECT',
+                    properties: {
+                      panel_number: { type: 'INTEGER' },
+                      timestamp: { type: 'STRING' },
+                      shot_type: { type: 'STRING' },
+                      description: { type: 'STRING' }
+                    },
+                    required: ['panel_number', 'timestamp', 'shot_type', 'description']
+                  }
+                }
+              },
+              required: [
+                'scene_number',
+                'duration_seconds',
+                'visual_prompt',
+                'timeline',
+                'dialogue',
+                'camera_movement',
+                'audio_prompt',
+                'continuity',
+                'negative_prompt',
+                'panels'
+              ]
+            }
+          }
+        },
+        required: ['analysis', 'scenes']
+      };
+
+      const textPayload = {
+        contents: [{ role: 'user', parts: multimodalParts }],
+        systemInstruction: { parts: [{ text: systemPrompt }] },
+        generationConfig: {
+          responseMimeType: 'application/json',
+          responseSchema
+        }
+      };
+
+      const rawResult = await fetchGeminiWithRetry(textApiUrl, textPayload, 3);
+      const rawJsonText = rawResult?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawJsonText) {
+        throw new Error('Respons analisis AI kosong. Silakan coba lagi.');
+      }
+
+      const parsed = JSON.parse(rawJsonText);
+
+      // Enforce exact scene count (1 or 2) and sanitize any forbidden CTA phrases
+      const normalizedScenes = (parsed.scenes || []).slice(0, sceneCount).map((sc, idx) => {
+        const cleanDialogue = language === 'none' ? '' : sanitizeForbiddenCTA(sc.dialogue || '');
+        const cleanVisualPrompt = sanitizeForbiddenCTA(sc.visual_prompt || '');
+        return {
+          ...sc,
+          scene_number: idx + 1,
+          duration_seconds: 10,
+          dialogue: cleanDialogue,
+          visual_prompt: cleanVisualPrompt,
+          panels: (sc.panels || []).slice(0, 6)
+        };
+      });
+
+      // Build the strict machine-readable JSON required by Section 13 of Master Prompt
+      const officialVeoJson = {
+        project: 'Ustadz Saiff Storyboard S.2',
+        video_model: 'Google Veo 3.1',
+        aspect_ratio: '9:16',
+        total_duration_seconds: durationMode,
+        language: language,
+        scenes: normalizedScenes.map((sc) => ({
+          scene_number: sc.scene_number,
+          duration_seconds: 10,
+          visual_prompt: sc.visual_prompt,
+          timeline: sc.timeline,
+          dialogue: sc.dialogue,
+          camera_movement: sc.camera_movement,
+          audio_prompt: sc.audio_prompt,
+          continuity: sc.continuity,
+          negative_prompt: sc.negative_prompt
+        }))
+      };
+
+      const formattedJsonStr = JSON.stringify(officialVeoJson, null, 2);
+      // Validate using JSON.parse as required
+      JSON.parse(formattedJsonStr);
+
+      setAnalysisResult(parsed.analysis);
+      setStoryboardData({
+        ...officialVeoJson,
+        richScenes: normalizedScenes
+      });
+      setValidatedJsonString(formattedJsonStr);
+      setIsJsonValid(true);
+
+      // Step 3: Generate actual 6-panel 9:16 Storyboard Images if in 'full' mode
+      let scene1Url = null;
+      let scene2Url = null;
+
+      if (generationMode === 'full') {
+        setProgressStep(3);
+        setProgressMessage('Menghasilkan Gambar Storyboard 6-Panel (9:16) untuk Scene 1...');
+        scene1Url = await generateSceneStoryboardImage(normalizedScenes[0], parsed.analysis, 1);
+
+        if (sceneCount === 2 && normalizedScenes[1]) {
+          setProgressStep(4);
+          setProgressMessage('Menghasilkan Gambar Storyboard 6-Panel (9:16) untuk Scene 2 (Kesinambungan Cerita)...');
+          scene2Url = await generateSceneStoryboardImage(normalizedScenes[1], parsed.analysis, 2);
+        }
+      }
+
+      setProgressStep(5);
+      setProgressMessage('Selesai! Storyboard dan Prompt Google Veo 3.1 siap digunakan.');
+
+      // Save to session history
+      const newHistoryEntry = {
+        id: Date.now().toString(),
+        timestamp: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }),
+        productName: parsed.analysis?.product_name || 'Produk Affiliate',
+        durationMode,
+        language,
+        styleLabel: styleObj?.label,
+        analysis: parsed.analysis,
+        storyboardData: {
+          ...officialVeoJson,
+          richScenes: normalizedScenes
+        },
+        validatedJsonString: formattedJsonStr,
+        scene1Url,
+        scene2Url
+      };
+      setHistoryItems((prev) => [newHistoryEntry, ...prev.slice(0, 9)]);
+    } catch (err) {
+      setErrorBanner(err.message || 'Terjadi kesalahan saat memproses storyboard.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handlePlayDialogueTTS = async (sceneNumber, dialogueText) => {
+    if (!dialogueText || language === 'none') return;
+
+    setTtsState((prev) => ({
+      ...prev,
+      [sceneNumber]: { loading: true, audioUrl: null, error: null }
+    }));
+
+    try {
+      const apiKey = '';
+      const ttsUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+
+      const voiceInstruction =
+        language === 'ms-MY'
+          ? `Say in an energetic, friendly, natural Malaysian Malay creator tone within 9 seconds: ${dialogueText}`
+          : `Ucapkan dengan intonasi konten kreator Indonesia yang energik, ramah, percaya diri, dan natural dalam waktu sekitar 9 detik: ${dialogueText}`;
+
+      const payload = {
+        contents: [{ parts: [{ text: voiceInstruction }] }],
+        generationConfig: {
+          responseModalities: ['AUDIO'],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Aoede' }
+            }
+          }
+        }
+      };
+
+      const result = await fetchGeminiWithRetry(ttsUrl, payload, 2);
+      const part = result?.candidates?.[0]?.content?.parts?.[0];
+      const audioBase64 = part?.inlineData?.data;
+      const mimeType = part?.inlineData?.mimeType || 'audio/L16;rate=24000';
+
+      if (!audioBase64) throw new Error('Audio TTS tidak tersedia.');
+
+      const rateMatch = mimeType.match(/rate=(\d+)/);
+      const sampleRate = rateMatch ? parseInt(rateMatch[1], 10) : 24000;
+      const wavUrl = pcmBase64ToWavUrl(audioBase64, sampleRate);
+
+      setTtsState((prev) => ({
+        ...prev,
+        [sceneNumber]: { loading: false, audioUrl: wavUrl, error: null }
+      }));
+    } catch (err) {
+      setTtsState((prev) => ({
+        ...prev,
+        [sceneNumber]: { loading: false, audioUrl: null, error: 'Gagal memuat pratinjau suara.' }
+      }));
+    }
+  };
+
+  const handleAutoAdjustDialogueLength = async (sceneIndex) => {
+    const targetScene = storyboardData?.richScenes?.[sceneIndex];
+    if (!targetScene || language === 'none') return;
+
+    try {
+      const apiKey = '';
+      const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+      const prompt = `Perbaiki dialog Scene ${targetScene.scene_number} berikut agar jumlah katanya TEPAT berada di kisaran 21 hingga 24 kata (sangat pas diucapkan dalam 10 detik dengan jeda natural), tanpa menghilangkan pesan utama dan TANPA menggunakan kata terlarang ("link di bio", "keranjang kuning", "lagi PO", "lagi diskon", "kirim sekarang", "lagi promo"). Bahasa: ${language === 'ms-MY' ? 'Bahasa Melayu Malaysia natural' : 'Bahasa Indonesia TikTok Affiliate natural'}.
+Dialog saat ini: "${targetScene.dialogue}"
+Kembalikan HANYA kalimat dialog hasil perbaikan tanpa tanda kutip tambahan.`;
+
+      const res = await fetchGeminiWithRetry(apiUrl, {
+        contents: [{ parts: [{ text: prompt }] }]
+      });
+      const newText = sanitizeForbiddenCTA(
+        res?.candidates?.[0]?.content?.parts?.[0]?.text?.trim().replace(/^["']|["']$/g, '') || targetScene.dialogue
+      );
+
+      const updatedRichScenes = storyboardData.richScenes.map((sc, idx) =>
+        idx === sceneIndex ? { ...sc, dialogue: newText } : sc
+      );
+      const updatedOfficialScenes = storyboardData.scenes.map((sc, idx) =>
+        idx === sceneIndex ? { ...sc, dialogue: newText } : sc
+      );
+
+      const updatedData = {
+        ...storyboardData,
+        scenes: updatedOfficialScenes,
+        richScenes: updatedRichScenes
+      };
+      const newJsonStr = JSON.stringify(
+        {
+          project: updatedData.project,
+          video_model: updatedData.video_model,
+          aspect_ratio: updatedData.aspect_ratio,
+          total_duration_seconds: updatedData.total_duration_seconds,
+          language: updatedData.language,
+          scenes: updatedOfficialScenes
+        },
+        null,
+        2
+      );
+      JSON.parse(newJsonStr);
+      setStoryboardData(updatedData);
+      setValidatedJsonString(newJsonStr);
+    } catch (e) {
+      setErrorBanner('Gagal menyesuaikan panjang dialog secara otomatis.');
+    }
+  };
+
+  const loadFromHistory = (item) => {
+    setDurationMode(item.durationMode);
+    setLanguage(item.language);
+    setAnalysisResult(item.analysis);
+    setStoryboardData(item.storyboardData);
+    setValidatedJsonString(item.validatedJsonString);
+    setIsJsonValid(true);
+    setSceneImageState({
+      1: { loading: false, url: item.scene1Url, error: null, promptUsed: '' },
+      2: { loading: false, url: item.scene2Url, error: null, promptUsed: '' }
+    });
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-white via-[#FFF7FA] to-[#FCE7F3]/50 text-slate-800 font-sans selection:bg-pink-500 selection:text-white">
+      {/* Top Decorative Ribbon */}
+      <div className="h-1.5 w-full bg-gradient-to-r from-pink-300 via-pink-500 to-rose-500" />
+
+      {/* A. HEADER */}
+      <header className="sticky top-0 z-30 backdrop-blur-xl bg-white/85 border-b border-pink-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-white shadow-md shadow-pink-200 shrink-0">
+              <Sparkles className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-slate-900 via-pink-700 to-rose-600 bg-clip-text text-transparent">
+                  USTADZ SAIFF STORYBOARD S.2
+                </h1>
+                <span className="px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider bg-pink-100 text-pink-700 rounded-full border border-pink-200">
+                  Veo 3.1 Ready
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Generator Storyboard Affiliate 6-Panel (9:16) & Prompt Video Presisi 10 Detik
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 self-start md:self-auto">
+            <button
+              onClick={loadSampleReferences}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-all active:scale-95"
+              title="Muat foto produk & model contoh untuk langsung menguji generasi AI"
+            >
+              <Wand2 className="w-3.5 h-3.5 text-pink-600" />
+              <span>Muat Contoh Siap Uji</span>
+            </button>
+
+            <button
+              onClick={() => setShowArchitectureModal(true)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-2xs transition-all active:scale-95"
+            >
+              <Server className="w-3.5 h-3.5 text-pink-600" />
+              <span>Kode Backend & Panduan Deploy</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Premium Wisdom Quote Banner */}
+        <div className="bg-gradient-to-r from-pink-50/80 via-white to-pink-50/80 border-t border-pink-100/80 py-2.5 px-4">
+          <div className="max-w-4xl mx-auto flex items-center justify-center gap-2 text-center">
+            <span className="inline-block w-2 h-2 rounded-full bg-pink-400 shrink-0" />
+            <p className="text-xs sm:text-sm font-medium italic text-slate-700 tracking-wide">
+              “Barang siapa yang bersungguh-sungguh, pasti akan mendapat hasil.”
+            </p>
+            <span className="inline-block w-2 h-2 rounded-full bg-pink-400 shrink-0" />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content Container */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {/* Global Error Notification Banner */}
+        {errorBanner && (
+          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-start justify-between gap-3 shadow-sm animate-fadeIn">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-sm font-bold text-rose-900">Perhatian Sistem</h4>
+                <p className="text-xs sm:text-sm text-rose-700 mt-0.5">{errorBanner}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setErrorBanner(null)}
+              className="p-1 rounded-lg text-rose-500 hover:bg-rose-100"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          {}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Step 1: Durasi & Scene */}
+            <section className="bg-white rounded-3xl p-5 sm:p-6 border border-pink-100 shadow-sm shadow-pink-100/40">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-sm border border-pink-200">
+                    1
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                      Pengaturan Durasi & Scene
+                    </h2>
+                    <p className="text-xs text-slate-500">Setiap scene terkunci presisi 10 detik</p>
+                  </div>
+                </div>
+                <Clock className="w-5 h-5 text-pink-500" />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setDurationMode(10)}
+                  className={`p-3.5 rounded-2xl border text-left transition-all ${
+                    durationMode === 10
+                      ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white border-pink-600 shadow-md shadow-pink-200'
+                      : 'bg-pink-50/40 hover:bg-pink-50 text-slate-700 border-pink-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-extrabold">10 Detik</span>
+                    <span
+                      className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+                        durationMode === 10 ? 'bg-white/20 text-white' : 'bg-pink-100 text-pink-700'
+                      }`}
+                    >
+                      1 Scene
+                    </span>
+                  </div>
+                  <p
+                    className={`text-[11px] mt-1.5 leading-relaxed ${
+                      durationMode === 10 ? 'text-pink-50' : 'text-slate-500'
+                    }`}
+                  >
+                    1 Storyboard (6 panel) + Hook, Manfaat & CTA padat dalam 10 dtk.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setDurationMode(20)}
+                  className={`p-3.5 rounded-2xl border text-left transition-all ${
+                    durationMode === 20
+                      ? 'bg-gradient-to-br from-pink-500 to-rose-500 text-white border-pink-600 shadow-md shadow-pink-200'
+                      : 'bg-pink-50/40 hover:bg-pink-50 text-slate-700 border-pink-100'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-extrabold">20 Detik</span>
+                    <span
+                      className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+                        durationMode === 20 ? 'bg-white/20 text-white' : 'bg-pink-100 text-pink-700'
+                      }`}
+                    >
+                      2 Scene
+                    </span>
+                  </div>
+                  <p
+                    className={`text-[11px] mt-1.5 leading-relaxed ${
+                      durationMode === 20 ? 'text-pink-50' : 'text-slate-500'
+                    }`}
+                  >
+                    2 Storyboard menyambung utuh (Scene 1: 10s + Scene 2: 10s).
+                  </p>
+                </button>
+              </div>
+            </section>
+
+            {/* Step 2: Input Foto Produk & Foto Model */}
+            <section className="bg-white rounded-3xl p-5 sm:p-6 border border-pink-100 shadow-sm shadow-pink-100/40 space-y-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-sm border border-pink-200">
+                    2
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                      Referensi Foto Produk & Model
+                    </h2>
+                    <p className="text-xs text-slate-500">Mendukung JPG, JPEG, PNG, WEBP</p>
+                  </div>
+                </div>
+                <Camera className="w-5 h-5 text-pink-500" />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Product Upload Card */}
+                <div className="flex flex-col">
+                  <label className="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
+                    <span>Foto Produk (Wajib)</span>
+                    <span className="text-[10px] text-pink-600 font-semibold">Presisi Visual</span>
+                  </label>
+                  <input
+                    ref={productInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={(e) => handleFileUpload(e, 'product')}
+                    className="hidden"
+                  />
+                  {productImage ? (
+                    <div className="relative group rounded-2xl overflow-hidden border-2 border-pink-300 bg-pink-50/30 aspect-square flex items-center justify-center">
+                      <img
+                        src={productImage.previewUrl}
+                        alt="Preview Produk"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-3">
+                        <button
+                          type="button"
+                          onClick={() => productInputRef.current?.click()}
+                          className="px-3 py-1.5 rounded-xl bg-white text-slate-900 text-xs font-bold shadow"
+                        >
+                          Ganti Foto
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setProductImage(null)}
+                          className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                      <span className="absolute bottom-2 left-2 right-2 truncate px-2 py-1 rounded-lg bg-white/90 backdrop-blur-xs text-[10px] font-semibold text-slate-700">
+                        {productImage.name} ({productImage.sizeKB} KB)
+                      </span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => productInputRef.current?.click()}
+                      className="aspect-square rounded-2xl border-2 border-dashed border-pink-200 hover:border-pink-400 bg-pink-50/30 hover:bg-pink-50/70 transition-all flex flex-col items-center justify-center p-4 text-center group"
+                    >
+                      <div className="w-11 h-11 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
+                        <Upload className="w-5 h-5" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800">Unggah Foto Produk</span>
+                      <span className="text-[11px] text-slate-500 mt-1">
+                        Merek, bentuk, warna & kemasan dipertahankan
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Model Upload Card */}
+                <div className="flex flex-col">
+                  <label className="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
+                    <span>Foto Model / Host</span>
+                    <span className="text-[10px] text-pink-600 font-semibold">Kunci Identitas</span>
+                  </label>
+                  <input
+                    ref={modelInputRef}
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/webp"
+                    onChange={(e) => handleFileUpload(e, 'model')}
+                    className="hidden"
+                  />
+                  {modelImage ? (
+                    <div className="relative group rounded-2xl overflow-hidden border-2 border-pink-300 bg-pink-50/30 aspect-square flex items-center justify-center">
+                      <img
+                        src={modelImage.previewUrl}
+                        alt="Preview Model"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-slate-900/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2 p-3">
+                        <button
+                          type="button"
+                          onClick={() => modelInputRef.current?.click()}
+                          className="px-3 py-1.5 rounded-xl bg-white text-slate-900 text-xs font-bold shadow"
+                        >
+                          Ganti Model
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setModelImage(null)}
+                          className="px-3 py-1.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow"
+                        >
+                          Hapus
+                        </button>
+                      </div>
+                      <span className="absolute bottom-2 left-2 right-2 truncate px-2 py-1 rounded-lg bg-white/90 backdrop-blur-xs text-[10px] font-semibold text-slate-700">
+                        {modelImage.name} ({modelImage.sizeKB} KB)
+                      </span>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => modelInputRef.current?.click()}
+                      className="aspect-square rounded-2xl border-2 border-dashed border-pink-200 hover:border-pink-400 bg-pink-50/30 hover:bg-pink-50/70 transition-all flex flex-col items-center justify-center p-4 text-center group"
+                    >
+                      <div className="w-11 h-11 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center mb-2.5 group-hover:scale-105 transition-transform">
+                        <User className="w-5 h-5" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800">Unggah Foto Model</span>
+                      <span className="text-[11px] text-slate-500 mt-1">
+                        Wajah, kulit, rambut/hijab & pakaian konsisten
+                      </span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Product Info */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Informasi Tambahan Produk (Opsional & Faktual)
+                </label>
+                <textarea
+                  rows={2}
+                  value={productNotes}
+                  onChange={(e) => setProductNotes(e.target.value)}
+                  placeholder="Contoh: Botol 30ml, bahan kaca tebal, manfaat melembapkan kulit kering. (AI tidak akan mengarang klaim di luar foto & catatan ini)"
+                  className="w-full rounded-2xl border border-pink-200 bg-pink-50/20 px-3.5 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white transition-all"
+                />
+              </div>
+            </section>
+
+            {/* Step 3: Latar Belakang, Gaya Konten & Bahasa */}
+            <section className="bg-white rounded-3xl p-5 sm:p-6 border border-pink-100 shadow-sm shadow-pink-100/40 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-pink-50 text-pink-600 flex items-center justify-center font-bold text-sm border border-pink-200">
+                    3
+                  </div>
+                  <div>
+                    <h2 className="text-sm sm:text-base font-bold text-slate-900">
+                      Latar, Gaya Konten & Bahasa Dialog
+                    </h2>
+                    <p className="text-xs text-slate-500">Kustomisasi sinematik & aturan kamera</p>
+                  </div>
+                </div>
+                <Palette className="w-5 h-5 text-pink-500" />
+              </div>
+
+              {/* Pilihan Latar Belakang (17 Pilihan) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Pilihan Latar Belakang (17 Opsi Modern)
+                </label>
+                <select
+                  value={selectedBg}
+                  onChange={(e) => setSelectedBg(e.target.value)}
+                  className="w-full rounded-2xl border border-pink-200 bg-pink-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white"
+                >
+                  {BACKGROUND_OPTIONS.map((bg) => (
+                    <option key={bg.id} value={bg.id}>
+                      {bg.label}
+                    </option>
+                  ))}
+                </select>
+
+                {selectedBg === 'custom-upload' && (
+                  <div className="mt-3 p-3 rounded-2xl bg-pink-50/50 border border-pink-200">
+                    <input
+                      ref={bgInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={(e) => handleFileUpload(e, 'bg')}
+                      className="hidden"
+                    />
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-xs text-slate-700">
+                        <p className="font-bold">Unggah Referensi Latar Belakang</p>
+                        <p className="text-[11px] text-slate-500">
+                          {customBgImage ? customBgImage.name : 'Belum ada file latar dipilih'}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => bgInputRef.current?.click()}
+                        className="px-3 py-1.5 rounded-xl bg-pink-600 text-white text-xs font-bold hover:bg-pink-700"
+                      >
+                        Pilih Foto Latar
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {selectedBg === 'custom-text' && (
+                  <input
+                    type="text"
+                    value={customBgText}
+                    onChange={(e) => setCustomBgText(e.target.value)}
+                    placeholder="Deskripsikan latar belakang secara detail (misal: meja rias marmer putih dengan lampu hangat)..."
+                    className="mt-2.5 w-full rounded-2xl border border-pink-200 bg-white px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  />
+                )}
+              </div>
+
+              {/* Pilihan Gaya Konten (24 Pilihan) */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Pilihan Gaya Konten (24 Gaya Spesifik)
+                </label>
+                <select
+                  value={selectedStyle}
+                  onChange={(e) => setSelectedStyle(e.target.value)}
+                  className="w-full rounded-2xl border border-pink-200 bg-pink-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white"
+                >
+                  {CONTENT_STYLES.map((st) => (
+                    <option key={st.id} value={st.id}>
+                      {st.label}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1.5 text-[11px] text-pink-700 bg-pink-50/70 px-3 py-1.5 rounded-xl border border-pink-100">
+                  <span className="font-bold">Aturan Visual Gaya Ini:</span>{' '}
+                  {CONTENT_STYLES.find((s) => s.id === selectedStyle)?.rule}
+                </p>
+
+                {selectedStyle === 'custom-style' && (
+                  <input
+                    type="text"
+                    value={customStyleText}
+                    onChange={(e) => setCustomStyleText(e.target.value)}
+                    placeholder="Tulis arahan gaya visual & gerakan kamera kustom..."
+                    className="mt-2.5 w-full rounded-2xl border border-pink-200 bg-white px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  />
+                )}
+              </div>
+
+              {/* Variasi Hook */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Strategi Hook Pembuka (0–2 Detik Pertama)
+                </label>
+                <select
+                  value={selectedHookType}
+                  onChange={(e) => setSelectedHookType(e.target.value)}
+                  className="w-full rounded-2xl border border-pink-200 bg-pink-50/30 px-3.5 py-2.5 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:bg-white"
+                >
+                  {HOOK_TYPES.map((hk) => (
+                    <option key={hk.id} value={hk.id}>
+                      {hk.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Pilihan Bahasa Dialog */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-2">
+                  Pilihan Bahasa Dialog
+                </label>
+                <div className="grid grid-cols-3 gap-2.5">
+                  {[
+                    { id: 'id-ID', title: 'Bahasa Indonesia', sub: 'Santai & Affiliate TikTok' },
+                    { id: 'ms-MY', title: 'Bahasa Malaysia', sub: 'Melayu Natural Malaysia' },
+                    { id: 'none', title: 'Tanpa Dialog', sub: 'Visual & Ambient Murni' }
+                  ].map((lang) => (
+                    <button
+                      key={lang.id}
+                      type="button"
+                      onClick={() => setLanguage(lang.id)}
+                      className={`p-2.5 rounded-2xl border text-center transition-all ${
+                        language === lang.id
+                          ? 'bg-pink-600 text-white border-pink-600 shadow-sm'
+                          : 'bg-pink-50/40 hover:bg-pink-50 text-slate-700 border-pink-100'
+                      }`}
+                    >
+                      <div className="text-xs font-bold">{lang.title}</div>
+                      <div
+                        className={`text-[10px] mt-0.5 ${
+                          language === lang.id ? 'text-pink-100' : 'text-slate-500'
+                        }`}
+                      >
+                        {lang.sub}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </section>
+
+            {/* Step 4: Mode Penggunaan & Tombol Generate */}
+            <section className="bg-white rounded-3xl p-5 sm:p-6 border border-pink-200 shadow-md shadow-pink-100/60 space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-700">Mode Generasi AI</span>
+                <span className="text-[11px] font-semibold text-pink-600">
+                  Transparansi Kuota & Layanan
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setGenerationMode('full')}
+                  className={`p-3 rounded-2xl border text-left transition-all ${
+                    generationMode === 'full'
+                      ? 'bg-pink-50 border-pink-400 text-pink-900 ring-2 ring-pink-300/50'
+                      : 'bg-white border-slate-200 text-slate-600'
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center gap-1.5">
+                    <ImageIcon className="w-3.5 h-3.5 text-pink-600" />
+                    <span>Full Storyboard + Prompt</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Hasilkan Gambar 6-Panel 9:16 Nyata + Prompt Veo 3.1
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setGenerationMode('prompt-only')}
+                  className={`p-3 rounded-2xl border text-left transition-all ${
+                    generationMode === 'prompt-only'
+                      ? 'bg-pink-50 border-pink-400 text-pink-900 ring-2 ring-pink-300/50'
+                      : 'bg-white border-slate-200 text-slate-600'
+                  }`}
+                >
+                  <div className="text-xs font-bold flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5 text-pink-600" />
+                    <span>Mode Prompt Tanpa Biaya</span>
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-1">
+                    Analisis Foto + Dialog 10s + Prompt Veo 3.1 (Hemat Kuota Gambar)
+                  </p>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                disabled={isGenerating}
+                onClick={handleGenerateStoryboard}
+                className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-pink-500 via-pink-600 to-rose-600 hover:from-pink-600 hover:to-rose-700 disabled:opacity-60 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2.5 transition-all active:scale-[0.99] cursor-pointer"
+              >
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <span>Memproses Storyboard & Prompt AI...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    <span>Generate Storyboard ({durationMode} Detik — {sceneCount} Scene)</span>
+                  </>
+                )}
+              </button>
+
+              {/* Progress Step Indicator */}
+              {isGenerating && (
+                <div className="p-4 rounded-2xl bg-pink-50/80 border border-pink-200 space-y-2.5">
+                  <div className="flex items-center justify-between text-xs font-bold text-pink-900">
+                    <span>Status Proses AI</span>
+                    <span>Tahap {progressStep} / {generationMode === 'full' ? (sceneCount === 2 ? 4 : 3) : 2}</span>
+                  </div>
+                  <div className="w-full h-2 rounded-full bg-pink-200/70 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-500"
+                      style={{ width: `${Math.min(100, (progressStep / 4) * 100)}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-pink-700 font-medium">{progressMessage}</p>
+                </div>
+              )}
+            </section>
+
+            {/* E. RIWAYAT GENERASI */}
+            {historyItems.length > 0 && (
+              <section className="bg-white rounded-3xl p-5 border border-pink-100 shadow-sm space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <History className="w-4 h-4 text-pink-600" />
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900">
+                      Riwayat Sesi Terbaru ({historyItems.length})
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setHistoryItems([])}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-600 hover:underline"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    <span>Hapus Riwayat</span>
+                  </button>
+                </div>
+
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {historyItems.map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => loadFromHistory(item)}
+                      className="p-3 rounded-2xl border border-pink-100 hover:border-pink-300 bg-pink-50/30 hover:bg-pink-50/70 transition-all cursor-pointer flex items-center justify-between gap-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-slate-800 truncate">
+                          {item.productName}
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          {item.durationMode} dtk • {item.styleLabel} • {item.timestamp}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-pink-500 shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          {}
+          <div className="lg:col-span-7 space-y-6">
+            {!storyboardData && !isGenerating ? (
+              <div className="bg-white rounded-3xl p-8 sm:p-12 border border-pink-100 shadow-sm text-center space-y-5">
+                <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-pink-100 to-rose-100 text-pink-600 flex items-center justify-center mx-auto shadow-inner">
+                  <Sparkles className="w-8 h-8" />
+                </div>
+                <div className="max-w-md mx-auto space-y-2">
+                  <h3 className="text-lg font-extrabold text-slate-900">
+                    Siap Membuat Storyboard Affiliate & Prompt Veo 3.1
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+                    Unggah foto produk dan foto model di panel kiri, pilih latar serta gaya konten, lalu tekan tombol{' '}
+                    <span className="font-bold text-pink-600">Generate Storyboard</span>.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl mx-auto pt-2 text-left">
+                  <div className="p-3.5 rounded-2xl bg-pink-50/50 border border-pink-100">
+                    <p className="text-xs font-bold text-pink-800">1. Analisis Multimodal</p>
+                    <p className="text-[11px] text-slate-600 mt-1">
+                      Deteksi fitur produk & kunci identitas wajah/pakaian model secara konsisten.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-pink-50/50 border border-pink-100">
+                    <p className="text-xs font-bold text-pink-800">2. Dialog Presisi 10 Detik</p>
+                    <p className="text-[11px] text-slate-600 mt-1">
+                      20–25 kata/scene bebas frasa CTA terlarang + fitur uji suara TTS langsung.
+                    </p>
+                  </div>
+                  <div className="p-3.5 rounded-2xl bg-pink-50/50 border border-pink-100">
+                    <p className="text-xs font-bold text-pink-800">3. Grid 6-Panel 9:16</p>
+                    <p className="text-[11px] text-slate-600 mt-1">
+                      Gambar storyboard fotorealistis 2×3 panel & JSON valid untuk Google Veo 3.1.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Top Action Bar for Quick Global Copy & Download */}
+                {storyboardData && (
+                  <div className="bg-white rounded-3xl p-4 sm:p-5 border border-pink-200 shadow-sm flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>Prompt siap digunakan di Veo 3.1</span>
+                      </span>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-pink-50 text-pink-700 border border-pink-200">
+                        <ShieldCheck className="w-3.5 h-3.5" />
+                        <span>Lolos Filter CTA</span>
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleGenerateStoryboard}
+                        disabled={isGenerating}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-all"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 ${isGenerating ? 'animate-spin' : ''}`} />
+                        <span>Generate Ulang</span>
+                      </button>
+
+                      {language !== 'none' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const allDialogues = storyboardData.richScenes
+                              .map(
+                                (s) =>
+                                  `=== DIALOG SCENE ${s.scene_number} (10 DETIK) ===\n"${s.dialogue}"\n[Intonasi: ${
+                                    s.intonation_guide || 'Energik, natural, percaya diri'
+                                  }]`
+                              )
+                              .join('\n\n');
+                            copyToClipboard(allDialogues, 'all-dialogues');
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-pink-100 hover:bg-pink-200 text-pink-800 border border-pink-300 transition-all"
+                        >
+                          {copiedKey === 'all-dialogues' ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                          <span>
+                            {copiedKey === 'all-dialogues' ? 'Dialog Tersalin!' : 'Salin Semua Dialog'}
+                          </span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const allPrompts = storyboardData.richScenes
+                            .map((s) => `=== SCENE ${s.scene_number} (10 DETIK - 9:16) ===\n${s.visual_prompt}`)
+                            .join('\n\n');
+                          copyToClipboard(allPrompts, 'all-prompts');
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white shadow-xs transition-all"
+                      >
+                        {copiedKey === 'all-prompts' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                        <span>{copiedKey === 'all-prompts' ? 'Tersalin!' : 'Salin Semua Prompt'}</span>
+                      </button>
+
+                      {(sceneImageState[1]?.url || sceneImageState[2]?.url) && (
+                        <button
+                          type="button"
+                          onClick={downloadAllImages}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white transition-all"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Unduh Semua Gambar</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Multimodal Analysis Summary Card */}
+                {analysisResult && (
+                  <section className="bg-white rounded-3xl p-5 sm:p-6 border border-pink-100 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+                      <div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-pink-600">
+                          Hasil Analisis Referensi Visual AI
+                        </span>
+                        <h3 className="text-base font-extrabold text-slate-900">
+                          {analysisResult.product_name} — <span className="text-pink-600">{analysisResult.product_category}</span>
+                        </h3>
+                      </div>
+                      <span className="px-2.5 py-1 rounded-xl bg-pink-50 text-pink-700 text-xs font-bold border border-pink-200">
+                        Identitas Terkunci
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="p-3.5 rounded-2xl bg-pink-50/40 border border-pink-100 space-y-1.5">
+                        <p className="font-bold text-slate-800">Detail Fisik & Visual Produk:</p>
+                        <p className="text-slate-600 leading-relaxed">{analysisResult.product_visual_details}</p>
+                        <p className="font-bold text-slate-800 pt-1">Cara Penggunaan di Konten:</p>
+                        <p className="text-slate-600 leading-relaxed">{analysisResult.usage_method}</p>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-pink-50/40 border border-pink-100 space-y-1.5">
+                        <p className="font-bold text-slate-800">Konsistensi Identitas Model:</p>
+                        <p className="text-slate-600 leading-relaxed">{analysisResult.model_identity_details}</p>
+                        <p className="font-bold text-slate-800 pt-1">Manfaat Logis & Terbukti:</p>
+                        <ul className="list-disc list-inside text-slate-600 space-y-0.5">
+                          {(analysisResult.logical_benefits || []).map((b, i) => (
+                            <li key={i}>{b}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Scene Cards (Scene 1 & Scene 2) */}
+                {storyboardData?.richScenes?.map((scene, idx) => {
+                  const sNum = scene.scene_number;
+                  const imgState = sceneImageState[sNum] || {};
+                  const speechMetrics = estimateSpeechMetrics(scene.dialogue, language);
+                  const forbiddenFound = checkContainsForbiddenCTA(scene.dialogue);
+
+                  return (
+                    <section
+                      key={sNum}
+                      className="bg-white rounded-3xl p-5 sm:p-6 border border-pink-200 shadow-sm space-y-5"
+                    >
+                      {/* Scene Header */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-pink-100 pb-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <span className="px-3 py-1 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white text-xs font-extrabold shadow-xs">
+                            SCENE {sNum}
+                          </span>
+                          <span className="text-xs font-bold text-slate-700">
+                            Durasi Tepat 10 Detik • Rasio 9:16 • 6 Panel Storyboard
+                          </span>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                          {language !== 'none' && scene.dialogue && (
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(scene.dialogue, `header-dlg-s${sNum}`)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-all"
+                            >
+                              {copiedKey === `header-dlg-s${sNum}` ? (
+                                <Check className="w-3.5 h-3.5" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                              <span>
+                                {copiedKey === `header-dlg-s${sNum}`
+                                  ? 'Dialog Tersalin!'
+                                  : `Salin Dialog Scene ${sNum}`}
+                              </span>
+                            </button>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => copyToClipboard(scene.visual_prompt, `prompt-s${sNum}`)}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 transition-all"
+                          >
+                            {copiedKey === `prompt-s${sNum}` ? (
+                              <Check className="w-3.5 h-3.5" />
+                            ) : (
+                              <Copy className="w-3.5 h-3.5" />
+                            )}
+                            <span>
+                              {copiedKey === `prompt-s${sNum}` ? 'Tersalin!' : `Salin Prompt Scene ${sNum}`}
+                            </span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setActivePromptModal(scene)}
+                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            <span>Lihat Prompt Lengkap</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-start">
+                        {/* Left Column inside Scene Card: 9:16 6-Panel Storyboard Image */}
+                        <div className="md:col-span-5 flex flex-col items-center">
+                          <div className="w-full max-w-[280px] aspect-[9/16] rounded-2xl border-2 border-pink-200 bg-pink-50/40 overflow-hidden relative flex flex-col items-center justify-center shadow-inner">
+                            {imgState.loading ? (
+                              <div className="p-6 text-center space-y-3">
+                                <div className="w-12 h-12 rounded-2xl bg-pink-100 text-pink-600 flex items-center justify-center mx-auto">
+                                  <RefreshCw className="w-6 h-6 animate-spin" />
+                                </div>
+                                <p className="text-xs font-bold text-pink-900">
+                                  Menghasilkan Storyboard 6-Panel Scene {sNum}...
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                  Menyusun grid 2 kolom × 3 baris (9:16) sesuai foto produk & model
+                                </p>
+                              </div>
+                            ) : imgState.url ? (
+                              <div className="relative w-full h-full group">
+                                <img
+                                  src={imgState.url}
+                                  alt={`Storyboard Scene ${sNum}`}
+                                  className="w-full h-full object-cover cursor-pointer"
+                                  onClick={() =>
+                                    setLightboxImage({
+                                      url: imgState.url,
+                                      title: `Storyboard Scene ${sNum} (6 Panel • 9:16)`
+                                    })
+                                  }
+                                />
+                                <div className="absolute inset-x-0 bottom-0 p-2.5 bg-gradient-to-t from-slate-900/80 via-slate-900/40 to-transparent flex items-center justify-between">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setLightboxImage({
+                                        url: imgState.url,
+                                        title: `Storyboard Scene ${sNum} (6 Panel • 9:16)`
+                                      })
+                                    }
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/90 text-slate-900 text-[11px] font-bold shadow"
+                                  >
+                                    <ZoomIn className="w-3 h-3" />
+                                    <span>Perbesar</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      downloadImagePng(
+                                        imgState.url,
+                                        `Ustadz_Saiff_Storyboard_Scene_${sNum}.png`
+                                      )
+                                    }
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-pink-600 text-white text-[11px] font-bold shadow"
+                                  >
+                                    <Download className="w-3 h-3" />
+                                    <span>Unduh PNG</span>
+                                  </button>
+                                </div>
+                              </div>
+                            ) : imgState.error ? (
+                              <div className="p-5 text-center space-y-3">
+                                <AlertCircle className="w-8 h-8 text-rose-500 mx-auto" />
+                                <p className="text-xs font-bold text-rose-800">
+                                  Gagal Membuat Gambar Scene {sNum}
+                                </p>
+                                <p className="text-[11px] text-rose-600">{imgState.error}</p>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    generateSceneStoryboardImage(scene, analysisResult, sNum)
+                                  }
+                                  className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-xs"
+                                >
+                                  Coba Lagi Scene {sNum}
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="p-5 text-center space-y-3">
+                                <ImageIcon className="w-8 h-8 text-pink-400 mx-auto" />
+                                <p className="text-xs font-bold text-slate-700">
+                                  Mode Prompt Aktif (Tanpa Gambar)
+                                </p>
+                                <p className="text-[11px] text-slate-500">
+                                  Klik tombol di bawah jika ingin menghasilkan gambar storyboard 6-panel untuk Scene {sNum}.
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    generateSceneStoryboardImage(scene, analysisResult, sNum)
+                                  }
+                                  className="px-3.5 py-2 rounded-xl bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold shadow-xs"
+                                >
+                                  Generate Gambar Scene {sNum}
+                                </button>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Image Action Buttons Under Frame */}
+                          {imgState.url && (
+                            <div className="w-full max-w-[280px] grid grid-cols-2 gap-2 mt-2.5">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  downloadImagePng(
+                                    imgState.url,
+                                    `Ustadz_Saiff_Storyboard_Scene_${sNum}.png`
+                                  )
+                                }
+                                className="py-2 px-3 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200 text-xs font-bold flex items-center justify-center gap-1.5"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                <span>Simpan / Unduh PNG</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  generateSceneStoryboardImage(scene, analysisResult, sNum)
+                                }
+                                className="py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-1.5"
+                              >
+                                <RefreshCw className="w-3.5 h-3.5" />
+                                <span>Buat Ulang Gambar</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Right Column inside Scene Card: 10s Dialogue, Timeline & 6 Panel Breakdown */}
+                        <div className="md:col-span-7 space-y-4">
+                          {/* Dialogue & 10-Second Pacing Box */}
+                          <div className="p-4 rounded-2xl bg-gradient-to-br from-pink-50/70 to-white border border-pink-200 space-y-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <span className="text-xs font-extrabold text-pink-900 flex items-center gap-1.5">
+                                <Volume2 className="w-4 h-4 text-pink-600" />
+                                <span>Dialog Scene {sNum} (Target Pas 10 Detik)</span>
+                              </span>
+
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`text-[11px] px-2.5 py-0.5 rounded-full font-bold ${
+                                    speechMetrics.status === 'optimal'
+                                      ? 'bg-emerald-100 text-emerald-800'
+                                      : speechMetrics.status === 'muted'
+                                      ? 'bg-slate-100 text-slate-700'
+                                      : 'bg-amber-100 text-amber-800'
+                                  }`}
+                                >
+                                  {speechMetrics.wordCount} Kata • Est. ~{speechMetrics.estimatedSeconds} dtk
+                                </span>
+
+                                {language !== 'none' && scene.dialogue && (
+                                  <button
+                                    type="button"
+                                    onClick={() => copyToClipboard(scene.dialogue, `dlg-text-${sNum}`)}
+                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-[11px] font-bold shadow-2xs transition-all cursor-pointer"
+                                  >
+                                    {copiedKey === `dlg-text-${sNum}` ? (
+                                      <>
+                                        <Check className="w-3 h-3" />
+                                        <span>Tersalin!</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Copy className="w-3 h-3" />
+                                        <span>Salin Teks Dialog</span>
+                                      </>
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+
+                            {language === 'none' ? (
+                              <p className="text-xs italic text-slate-600 bg-white/80 p-3 rounded-xl border border-pink-100">
+                                Mode Tanpa Dialog aktif: Tidak ada voice-over/percakapan. Veo 3.1 diinstruksikan fokus pada ekspresi, gerakan demonstrasi produk, dan suara lingkungan natural.
+                              </p>
+                            ) : (
+                              <>
+                                {/* Blok Kode Salin Dialog (Copyable Code Box) */}
+                                <div className="space-y-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[11px] font-bold text-slate-700">
+                                      Kode Skrip Dialog & Intonasi — Scene {sNum}
+                                    </span>
+                                    <div className="flex items-center gap-3">
+                                      <button
+                                        type="button"
+                                        onClick={() => copyToClipboard(scene.dialogue, `dlg-raw-${sNum}`)}
+                                        className="text-[11px] font-bold text-pink-600 hover:underline flex items-center gap-1"
+                                      >
+                                        {copiedKey === `dlg-raw-${sNum}` ? (
+                                          <>
+                                            <Check className="w-3 h-3" />
+                                            <span>Kalimat Tersalin</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Copy className="w-3 h-3" />
+                                            <span>Salin Kalimat Saja</span>
+                                          </>
+                                        )}
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          copyToClipboard(
+                                            `[SCENE ${sNum} - 00:00 s/d 00:10 | Intonasi: ${
+                                              scene.intonation_guide || 'Energik, natural, percaya diri'
+                                            }]\n"${scene.dialogue}"`,
+                                            `dlg-code-${sNum}`
+                                          )
+                                        }
+                                        className="text-[11px] font-bold text-slate-800 hover:text-pink-600 hover:underline flex items-center gap-1"
+                                      >
+                                        {copiedKey === `dlg-code-${sNum}` ? (
+                                          <>
+                                            <Check className="w-3 h-3 text-emerald-600" />
+                                            <span className="text-emerald-700">Kode Dialog Tersalin</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Copy className="w-3 h-3" />
+                                            <span>Salin Kode Lengkap</span>
+                                          </>
+                                        )}
+                                      </button>
+                                    </div>
+                                  </div>
+
+                                  <pre className="p-3.5 rounded-2xl bg-slate-900 text-pink-50 font-mono text-xs leading-relaxed whitespace-pre-wrap break-words border border-slate-800 shadow-inner select-all">
+{`[SCENE ${sNum} • 00:00–00:10 • ${language === 'ms-MY' ? 'Bahasa Melayu Malaysia' : 'Bahasa Indonesia'}]
+Intonasi: ${scene.intonation_guide || 'Energik, natural, percaya diri'}
+Dialog  : "${scene.dialogue}"`}
+                                  </pre>
+                                </div>
+
+                                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                                  <span className="text-[11px] text-slate-500">
+                                    Intonasi: <strong className="text-slate-700">{scene.intonation_guide || 'Energik, natural, percaya diri'}</strong>
+                                  </span>
+
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleAutoAdjustDialogueLength(idx)}
+                                      className="px-2.5 py-1 rounded-lg bg-white hover:bg-pink-50 text-pink-700 border border-pink-200 text-[11px] font-bold"
+                                    >
+                                      Kalibrasi 22 Kata
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      disabled={ttsState[sNum]?.loading}
+                                      onClick={() => handlePlayDialogueTTS(sNum, scene.dialogue)}
+                                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-pink-600 hover:bg-pink-700 text-white text-[11px] font-bold"
+                                    >
+                                      <Play className="w-3 h-3" />
+                                      <span>
+                                        {ttsState[sNum]?.loading ? 'Memuat Audio...' : 'Uji Audio 10s (TTS)'}
+                                      </span>
+                                    </button>
+                                  </div>
+                                </div>
+
+                                {ttsState[sNum]?.audioUrl && (
+                                  <div className="pt-2">
+                                    <audio
+                                      controls
+                                      src={ttsState[sNum].audioUrl}
+                                      className="w-full h-8"
+                                    />
+                                  </div>
+                                )}
+
+                                {forbiddenFound.length > 0 && (
+                                  <p className="text-[11px] text-rose-600 font-semibold">
+                                    Peringatan: Ditemukan kata terlarang ({forbiddenFound.join(', ')}).
+                                  </p>
+                                )}
+                              </>
+                            )}
+                          </div>
+
+                          {/* 10-Second Timeline Breakdown */}
+                          <div className="space-y-2">
+                            <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                               Pembagian Waktu Aksi (Timeline 10 Detik)
+                            </h4>
+                            <div className="grid grid-cols-1 gap-2">
+                              {(scene.timeline || []).map((t, tIdx) => (
+                                <div
+                                  key={tIdx}
+                                  className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-start gap-2.5 text-xs"
+                                >
+                                  <span className="px-2 py-0.5 rounded-lg bg-pink-100 text-pink-800 font-bold shrink-0">
+                                    {t.start}–{t.end} dtk
+                                  </span>
+                                  <span className="text-slate-700">{t.action}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* 6 Panel Grid Descriptions */}
+                          <div className="space-y-2">
+                            <h4 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+                              Rincian 6 Panel Sinematik (Grid 2×3)
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              {(scene.panels || []).map((panel) => (
+                                <div
+                                  key={panel.panel_number}
+                                  className="p-2.5 rounded-xl bg-pink-50/30 border border-pink-100 text-[11px] space-y-0.5"
+                                >
+                                  <div className="flex items-center justify-between font-bold text-pink-800">
+                                    <span>Panel {panel.panel_number}</span>
+                                    <span>{panel.timestamp}</span>
+                                  </div>
+                                  <p className="font-semibold text-slate-800">{panel.shot_type}</p>
+                                  <p className="text-slate-600 leading-snug">{panel.description}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Copy-Ready Google Veo 3.1 Prompt Box */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-extrabold text-slate-800">
+                                Prompt Video Google Veo 3.1 — Scene {sNum}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => copyToClipboard(scene.visual_prompt, `veo-box-${sNum}`)}
+                                className="text-[11px] font-bold text-pink-600 hover:underline flex items-center gap-1"
+                              >
+                                {copiedKey === `veo-box-${sNum}` ? (
+                                  <>
+                                    <Check className="w-3 h-3" />
+                                    <span>Berhasil Disalin</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3" />
+                                    <span>Salin Blok Prompt</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                            <div className="p-3 rounded-2xl bg-slate-900 text-pink-50 font-mono text-[11px] leading-relaxed max-h-36 overflow-y-auto">
+                              {scene.visual_prompt}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </section>
+                  );
+                })}
+
+                {/* Validated JSON Output Panel (Section 13) */}
+                {storyboardData && (
+                  <section className="bg-white rounded-3xl p-5 sm:p-6 border border-pink-200 shadow-sm space-y-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-slate-900 text-pink-400 flex items-center justify-center">
+                          <FileJson className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-sm sm:text-base font-bold text-slate-900">
+                              Format JSON Prompt Video & Dialog (Google Veo 3.1)
+                            </h3>
+                            {isJsonValid && (
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
+                                JSON Valid Terverifikasi Parser
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-slate-500">
+                            Struktur JSON mesin tanpa komentar atau trailing comma
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          disabled={!isJsonValid}
+                          onClick={() => copyToClipboard(validatedJsonString, 'json-copy')}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-pink-600 hover:bg-pink-700 text-white shadow-xs transition-all"
+                        >
+                          {copiedKey === 'json-copy' ? (
+                            <Check className="w-3.5 h-3.5" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                          <span>{copiedKey === 'json-copy' ? 'JSON Tersalin!' : 'Salin JSON'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          disabled={!isJsonValid}
+                          onClick={downloadJsonFile}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 transition-all"
+                        >
+                          <Download className="w-3.5 h-3.5" />
+                          <span>Unduh .JSON</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <pre className="p-4 rounded-2xl bg-slate-950 text-pink-100 font-mono text-xs overflow-x-auto max-h-80 leading-relaxed">
+                      {validatedJsonString}
+                    </pre>
+                  </section>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </main>
+
+      {}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setLightboxImage(null)}
+        >
+          <div
+            className="relative max-w-md w-full bg-white rounded-3xl p-4 shadow-2xl space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h4 className="text-sm font-extrabold text-slate-900">{lightboxImage.title}</h4>
+              <button
+                onClick={() => setLightboxImage(null)}
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="rounded-2xl overflow-hidden border border-pink-200 max-h-[75vh] flex items-center justify-center bg-slate-900">
+              <img
+                src={lightboxImage.url}
+                alt={lightboxImage.title}
+                className="max-h-[75vh] w-auto object-contain"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => downloadImagePng(lightboxImage.url, 'Ustadz_Saiff_Storyboard.png')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-pink-600 text-white text-xs font-bold"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Unduh Gambar PNG</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Full Prompt Detail Modal */}
+      {activePromptModal && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setActivePromptModal(null)}
+        >
+          <div
+            className="max-w-2xl w-full bg-white rounded-3xl p-6 shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+              <div>
+                <span className="text-xs font-bold text-pink-600 uppercase">
+                  Spesifikasi Lengkap Google Veo 3.1
+                </span>
+                <h3 className="text-base font-extrabold text-slate-900">
+                  Detail Prompt Scene {activePromptModal.scene_number} (10 Detik • 9:16)
+                </h3>
+              </div>
+              <button
+                onClick={() => setActivePromptModal(null)}
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-3.5 rounded-2xl bg-pink-50/60 border border-pink-200">
+                <p className="font-bold text-pink-900 mb-1">Prompt Visual Utama (Siap Tempel ke Veo 3.1):</p>
+                <p className="text-slate-800 leading-relaxed whitespace-pre-line">
+                  {activePromptModal.visual_prompt}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                  <p className="font-bold text-slate-800">Pergerakan Kamera:</p>
+                  <p className="text-slate-600 mt-0.5">{activePromptModal.camera_movement}</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                  <p className="font-bold text-slate-800">Desain Suara & Audio:</p>
+                  <p className="text-slate-600 mt-0.5">{activePromptModal.audio_prompt}</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
+                  <p className="font-bold text-slate-800">Instruksi Kesinambungan (Continuity):</p>
+                  <p className="text-slate-600 mt-0.5">{activePromptModal.continuity}</p>
+                </div>
+                <div className="p-3 rounded-2xl bg-rose-50/60 border border-rose-200">
+                  <p className="font-bold text-rose-900">Negative Prompt (Batasan Visual):</p>
+                  <p className="text-rose-700 mt-0.5">{activePromptModal.negative_prompt}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => copyToClipboard(activePromptModal.visual_prompt, 'modal-copy')}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-pink-600 text-white text-xs font-bold"
+              >
+                {copiedKey === 'modal-copy' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedKey === 'modal-copy' ? 'Tersalin!' : 'Salin Prompt Lengkap'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {}
+      {showArchitectureModal && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={() => setShowArchitectureModal(false)}
+        >
+          <div
+            className="max-w-3xl w-full bg-white rounded-3xl p-6 shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-pink-100 pb-3">
+              <div className="flex items-center gap-2.5">
+                <Server className="w-5 h-5 text-pink-600" />
+                <h3 className="text-base font-extrabold text-slate-900">
+                  Arsitektur Backend Node.js Aman & Panduan Publikasi Online Gratis
+                </h3>
+              </div>
+              <button
+                onClick={() => setShowArchitectureModal(false)}
+                className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs text-slate-700 leading-relaxed">
+              <div className="p-3.5 rounded-2xl bg-pink-50 border border-pink-200 space-y-1">
+                <p className="font-bold text-pink-900">
+                  Keamanan API Key & Penggunaan Gratis (Free Tier):
+                </p>
+                <p>
+                  Di lingkungan produksi publik, simpan <code className="font-mono bg-white px-1.5 py-0.5 rounded">GEMINI_API_KEY</code> di dalam Environment Variables (<code className="font-mono bg-white px-1.5 py-0.5 rounded">.env</code>) pada server Node.js agar tidak pernah terekspos di browser pengguna. Anda dapat menggunakan paket gratis Vercel / Cloudflare Pages untuk Frontend dan Render / Railway / Cloud Run untuk Backend Node.js.
+                </p>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-bold text-slate-900">
+                    Contoh Implementasi Backend Node.js (`server.js` / Express):
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      copyToClipboard(
+                        `import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const app = express();
+app.use(cors());
+app.use(express.json({ limit: '15mb' }));
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+app.post('/api/analyze-and-prompt', async (req, res) => {
+  try {
+    if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum diatur di server .env');
+    const response = await fetch(
+      \`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=\${GEMINI_API_KEY}\`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      }
+    );
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/generate-storyboard-image', async (req, res) => {
+  try {
+    if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY belum diatur di server .env');
+    const response = await fetch(
+      \`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=\${GEMINI_API_KEY}\`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(req.body)
+      }
+    );
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.listen(process.env.PORT || 8080, () => console.log('Ustadz Saiff Backend Ready'));`,
+                        'backend-code'
+                      )
+                    }
+                    className="text-pink-600 font-bold hover:underline"
+                  >
+                    {copiedKey === 'backend-code' ? 'Kode Tersalin!' : 'Salin Kode Server'}
+                  </button>
+                </div>
+                <pre className="p-3.5 rounded-2xl bg-slate-900 text-pink-100 font-mono text-[11px] overflow-x-auto">
+{`// File: server.js (Node.js + Express)
+// Jalankan dengan: GEMINI_API_KEY="AIza..." node server.js
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const app = express();
+app.use(cors());
+app.use(express.json({ limit: '15mb' }));
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+
+// 1. Endpoint Analisis Multimodal Produk/Model & Generator Prompt Veo 3.1 (Bisa Free Tier)
+app.post('/api/analyze-and-prompt', async (req, res) => {
+  const response = await fetch(
+    \`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=\${GEMINI_API_KEY}\`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body) }
+  );
+  res.json(await response.json());
+});
+
+// 2. Endpoint Generasi Gambar Storyboard 6-Panel 9:16
+app.post('/api/generate-storyboard-image', async (req, res) => {
+  const response = await fetch(
+    \`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key=\${GEMINI_API_KEY}\`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(req.body) }
+  );
+  res.json(await response.json());
+});`}
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
